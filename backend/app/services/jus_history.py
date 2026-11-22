@@ -8,7 +8,7 @@ from pathlib import Path
 
 from app.services.jus_source import JusRecord, JusSourceError
 
-DATA_PATH = Path(__file__).resolve().parents[3] / "data" / "jus_history.csv"
+DATA_PATH = Path(__file__).resolve().parents[2] / "data" / "jus_history.csv"
 FIELDS = ["effective_date", "value_ars", "source_url", "fetched_at"]
 
 
