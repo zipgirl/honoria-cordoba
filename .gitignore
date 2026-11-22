@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+.coverage
+htmlcov/
+
+# Frontend
+node_modules/
+.next/
+dist/
+build/
+coverage/
+
+# Local data and uploaded documents
+data/private/
+data/uploads/
+data/processed/
+*.pdf
+*.doc
+*.docx
+*.odt
+*.sqlite
+*.db
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
