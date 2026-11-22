@@ -68,7 +68,7 @@ function App() {
 
   return <div className="app-shell">
     <aside className={`sidebar ${mobileOpen ? "sidebar-open" : ""}`}>
-      <div className="brand"><div className="brand-mark"><Gavel size={19} strokeWidth={1.7}/></div><div><strong>honoria</strong><span>CÓRDOBA · ARGENTINA</span></div><button className="mobile-close icon-button" onClick={() => setMobileOpen(false)} aria-label="Cerrar menú"><X size={18}/></button></div>
+      <div className="brand"><div className="brand-mark"><img src="/images/H.webp" alt="Logo de Honoria" /></div><div><strong>Honoria</strong><span>CÓRDOBA · ARGENTINA</span></div><button className="mobile-close icon-button" onClick={() => setMobileOpen(false)} aria-label="Cerrar menú"><X size={18}/></button></div>
       <div className="workspace-label">ESPACIO PERSONAL</div>
       <nav className="main-nav" aria-label="Navegación principal">
         {nav.map(item => { const Icon = item.icon; return <button key={item.id} className={`nav-item ${section === item.id ? "active" : ""}`} onClick={() => changeSection(item.id)}><Icon size={18}/><span>{item.label}</span>{section === item.id && <span className="nav-dot"/>}</button>; })}
