@@ -148,7 +148,7 @@ async def legal_research(request: ResearchRequest) -> dict:
                 "version": source.version,
                 "captured_at": source.captured_at,
                 "url": source.url,
-                "excerpt": source.text,
+                "summary": source.text,
             }
             for source in sources
         ],
