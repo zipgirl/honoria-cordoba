@@ -4,7 +4,14 @@ from app import main
 
 
 def test_research_returns_no_answer_when_corpus_has_no_match(monkeypatch):
+    # Isolate the API's no-source behavior: this test must never call Cohere.
     monkeypatch.setenv("COHERE_API_KEY", "test-key")
+    monkeypatch.setattr(main, "retrieve_sources", lambda question: [])
+
+    async def unexpected_provider_call(question, sources):
+        raise AssertionError("Cohere must not be called when retrieval returns no sources.")
+
+    monkeypatch.setattr(main, "generate_answer", unexpected_provider_call)
     client = TestClient(main.app)
     response = client.post(
         "/api/v1/research",
