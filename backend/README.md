@@ -1,6 +1,6 @@
 # Backend — Honoria Córdoba
 
-API inicial y motor arancelario determinístico. La integración del JUS consulta la página pública del Colegio de Abogados de Córdoba y valida importe y fecha de vigencia.
+API inicial, motor arancelario determinístico e investigación normativa asistida.
 
 ## Requisitos
 
@@ -30,21 +30,27 @@ Guardar un nuevo valor en el histórico solo tras validar la salida:
 honoria-import-jus --write
 ```
 
-El importador:
-- Solo consulta HTTPS en `www.abogado.org.ar`.
-- Extrae valor y fecha de vigencia desde la sección “Valor Jus”.
-- Conserva el histórico; no sobrescribe automáticamente una fecha existente si el importe cambia.
-- Usa decimales exactos (`Decimal`), nunca `float`.
-- No necesita credenciales, no lee archivos de entorno y no requiere tocar `.env`.
+El importador solo consulta HTTPS en `www.abogado.org.ar`, conserva el histórico y usa `Decimal`. No necesita credenciales ni lee archivos de entorno.
 
-Fuente oficial: https://www.abogado.org.ar/valores-y-tasas/
+## Investigación normativa
 
-## Endpoints
+- `POST /api/v1/research` — recibe `{"question":"..."}`, recupera extractos de un corpus inicial y sintetiza una respuesta con Cohere.
+- Requiere `COHERE_API_KEY` como variable protegida del servicio. Opcional: `COHERE_MODEL`.
+- El modelo no es fuente de derecho: las citas las adjunta el backend desde el corpus recuperado.
+- Si no hay coincidencias suficientes, no se llama al modelo y se devuelve una respuesta explícita sin fuentes.
+- El corpus inicial es deliberadamente limitado a artículos seleccionados de la Ley cordobesa 9459 y el Código Civil y Comercial nacional. No cubre toda la legislación ni reemplaza la verificación del texto vigente. No incluye jurisprudencia.
+- Cada resultado identifica jurisdicción, norma, artículo, URL oficial y fecha de captura del extracto.
+
+Fuentes oficiales consultadas:
+- Ley 9459 (texto actualizado): https://www.argentina.gob.ar/normativa/provincial/ley-9459-123456789-0abc-defg-954-9000ovorpyel/actualizacion
+- Código Civil y Comercial, Ley 26.994 (texto actualizado): https://www.argentina.gob.ar/normativa/nacional/c%C3%B3digo-civil-y-comercial-de-la-naci%C3%B3n-235975/actualizacion
+
+## JUS endpoints
 
 - `GET /health`
-- `GET /api/v1/jus/current` — consulta online del valor actual.
-- `GET /api/v1/jus/historical?on=YYYY-MM-DD` — valor histórico guardado.
-- `GET /api/v1/jus/convert?amount=2&on=YYYY-MM-DD` — JUS a pesos.
-- `GET /api/v1/jus/convert-to-jus?amount_ars=104642.94&on=YYYY-MM-DD` — pesos a JUS.
+- `GET /api/v1/jus/current`
+- `GET /api/v1/jus/historical?on=YYYY-MM-DD`
+- `GET /api/v1/jus/convert?amount=2&on=YYYY-MM-DD`
+- `GET /api/v1/jus/convert-to-jus?amount_ars=104642.94&on=YYYY-MM-DD`
 
-El histórico inicial contiene el valor oficial publicado con vigencia 1/11/2026. No se inventan valores anteriores. La disponibilidad del endpoint histórico depende de que existan registros para la fecha consultada.
+El histórico inicial contiene el valor oficial publicado con vigencia 1/11/2026. No se inventan valores anteriores.

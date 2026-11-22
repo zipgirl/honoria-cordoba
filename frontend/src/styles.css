@@ -8,3 +8,14 @@
 
 /* Brand mark uses the repository's official WebP logo. */
 .brand-mark{background:transparent;padding:0}.brand-mark img{display:block;width:100%;height:100%;object-fit:contain}
+
+.research-result{margin-top:22px;padding:20px;border:1px solid #e8e2d8;border-radius:14px;background:#fffdfa}
+.research-result-heading{display:flex;justify-content:space-between;gap:12px;align-items:center;color:#342f39;font-size:13px}
+.research-result-heading span{font-size:9px;letter-spacing:.09em;color:#766b84;background:#f0edf4;padding:6px 8px;border-radius:20px}
+.research-answer{white-space:pre-wrap;color:#39343c;font-size:13px;line-height:1.8;margin:16px 0}
+.research-citations{border-top:1px solid #ece7df;padding-top:15px;display:grid;gap:12px;font-size:12px}
+.research-citation{padding:12px;background:#f8f6f1;border-radius:10px}
+.research-citation p{color:#655e66;line-height:1.6;margin:7px 0}
+.research-citation small{display:block;color:#817984;line-height:1.5}
+.research-citation a{display:inline-flex;align-items:center;gap:5px;color:#6f5d83;text-decoration:none;font-weight:600;margin-top:8px}
+.research-disclaimer{font-size:10px;line-height:1.6;color:#817984;margin:15px 0 0}
