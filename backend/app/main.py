@@ -31,15 +31,24 @@ def health() -> dict[str, str]:
 
 @app.get("/api/v1/jus/current")
 def current_jus() -> dict[str, str]:
+    source_status = "live"
     try:
         record = fetch_official_jus()
-    except JusSourceError as exc:
-        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except JusSourceError:
+        records = read_records()
+        if not records:
+            raise HTTPException(
+                status_code=503,
+                detail="La fuente oficial no está disponible y no hay un valor JUS verificado en caché.",
+            )
+        record = records[-1]
+        source_status = "cached"
     return {
         "value_ars": format(record.value_ars, ".2f"),
         "effective_date": record.effective_date.isoformat(),
         "source_url": record.source_url,
         "fetched_at": record.fetched_at.isoformat(),
+        "source_status": source_status,
     }
 
 
