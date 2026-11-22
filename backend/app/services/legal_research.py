@@ -63,10 +63,24 @@ SOURCES = (
 )
 
 
+_STOP_WORDS = {
+    "que", "del", "las", "los", "una", "uno", "unos", "unas", "por", "para",
+    "con", "sin", "sobre", "entre", "desde", "hasta", "hacia", "como", "cuando",
+    "donde", "quien", "quienes", "cual", "cuales", "este", "esta", "estos",
+    "estas", "ese", "esa", "esos", "esas", "aquel", "aquella", "aquellos",
+    "aquellas", "hay", "fue", "son", "ser", "del", "sus", "les", "nos",
+    "ellos", "ellas", "ella", "ello", "usted", "ustedes", "caso", "casos",
+    "dijo", "dice", "decir", "contra", "segun", "sobre", "tambien",
+}
+
+
 def _tokens(value: str) -> set[str]:
     normalized = unicodedata.normalize("NFKD", value.lower())
     normalized = "".join(ch for ch in normalized if not unicodedata.combining(ch))
-    return {token for token in re.findall(r"[a-z0-9]+", normalized) if len(token) > 2}
+    return {
+        token for token in re.findall(r"[a-z0-9]+", normalized)
+        if len(token) > 2 and token not in _STOP_WORDS
+    }
 
 
 def retrieve_sources(question: str, limit: int = 5) -> list[LegalSource]:
