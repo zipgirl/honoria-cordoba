@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Activity, ArrowDownRight, ArrowRight, ArrowUpRight, BookOpen, Calculator,
   Check, ChevronDown, ChevronRight, CircleHelp, FileCheck2, FileLock2,
@@ -8,6 +8,8 @@ import {
 
 type Section = "inicio" | "investigacion" | "honorarios" | "anonimizacion";
 type JusInfo = { value_ars: string; effective_date: string; source_url: string };
+type JusConversion = { ars: string };
+type ArsConversion = { jus: string };
 const API = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "");
 const money = (value: number) => new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 2 }).format(value);
 
@@ -18,6 +20,8 @@ function App() {
   const [apiState, setApiState] = useState<"loading" | "online" | "offline">("loading");
   const [jusAmount, setJusAmount] = useState("2");
   const [arsAmount, setArsAmount] = useState("100000");
+  const [convertedJus, setConvertedJus] = useState<JusConversion | null>(null);
+  const [convertedArs, setConvertedArs] = useState<ArsConversion | null>(null);
   const [query, setQuery] = useState("");
   const [question, setQuestion] = useState("");
 
@@ -29,8 +33,20 @@ function App() {
       .catch(() => setApiState("offline"));
   }, []);
 
-  const convertedJus = useMemo(() => jus ? Number(jusAmount || 0) * Number(jus.value_ars) : null, [jus, jusAmount]);
-  const convertedArs = useMemo(() => jus ? Number(arsAmount || 0) / Number(jus.value_ars) : null, [jus, arsAmount]);
+  useEffect(() => {
+    if (!API || !jus || !jusAmount || !arsAmount) { setConvertedJus(null); setConvertedArs(null); return; }
+    const controller = new AbortController();
+    const paramsJus = new URLSearchParams({ amount: jusAmount });
+    const paramsArs = new URLSearchParams({ amount_ars: arsAmount });
+    Promise.all([
+      fetch(`${API}/api/v1/jus/convert?${paramsJus}`, { signal: controller.signal }).then(r => r.ok ? r.json() : Promise.reject(new Error("JUS conversion unavailable"))),
+      fetch(`${API}/api/v1/jus/convert-to-jus?${paramsArs}`, { signal: controller.signal }).then(r => r.ok ? r.json() : Promise.reject(new Error("ARS conversion unavailable"))),
+    ]).then(([jusResult, arsResult]: [JusConversion, ArsConversion]) => {
+      setConvertedJus(jusResult);
+      setConvertedArs(arsResult);
+    }).catch(error => { if (error.name !== "AbortError") { setConvertedJus(null); setConvertedArs(null); } });
+    return () => controller.abort();
+  }, [jus, jusAmount, arsAmount]);
   const nav = [
     { id: "inicio" as const, label: "Inicio", icon: LayoutDashboard },
     { id: "investigacion" as const, label: "Investigación jurídica", icon: BookOpen },
@@ -80,7 +96,7 @@ function App() {
 
         {section === "investigacion" && <section className="module-layout"><div className="panel module-panel"><div className="module-icon lilac"><BookOpen size={21}/></div><span className="panel-kicker">ASISTENTE NORMATIVO · CÓRDOBA</span><h2>¿Qué necesitás investigar?</h2><p className="module-intro">Formulá una pregunta jurídica. Las respuestas deberán basarse en fuentes normativas identificables y mostrar su vigencia.</p><label className="field-label" htmlFor="legal-query">Tu consulta</label><textarea id="legal-query" value={question} onChange={e => setQuestion(e.target.value)} placeholder="Ej. ¿Qué establece la Ley 9459 sobre la regulación de honorarios en primera instancia?" rows={5}/><div className="form-actions"><span className="field-hint"><ShieldCheck size={14}/> No incluyas datos personales ni información confidencial.</span><button className="primary-button" disabled={!question.trim()} onClick={() => setQuery(question)}>Preparar consulta <ArrowRight size={16}/></button></div>{query && <div className="notice-box"><Activity size={17}/><div><strong>Consulta preparada</strong><p>El motor de investigación normativa todavía no está conectado. No se generó una respuesta ni se inventaron citas.</p></div></div>}</div><aside className="side-info"><div className="panel"><span className="panel-kicker">FUENTES PREVISTAS</span><h3>Marco normativo</h3><ul className="source-list"><li><FileText size={16}/> Ley provincial 9459 y modificatorias</li><li><FileText size={16}/> Código Procesal Civil y Comercial de Córdoba</li><li><FileText size={16}/> Código Civil y Comercial de la Nación</li><li><FileText size={16}/> Resoluciones oficiales del JUS</li></ul><div className="info-foot">La primera versión no incluye jurisprudencia.</div></div></aside></section>}
 
-        {section === "honorarios" && <section className="module-layout"><div className="panel module-panel calculator-panel"><div className="module-icon sand"><Calculator size={21}/></div><span className="panel-kicker">CONVERSOR JUS · PESOS</span><h2>Calculá con transparencia.</h2><p className="module-intro">Conversión informativa usando el último valor disponible en la API. No reemplaza la determinación de honorarios conforme a la ley.</p><div className="conversion-block"><div className="conversion-head"><label htmlFor="jus-amount">JUS a pesos</label><span>CONVERSIÓN DIRECTA</span></div><div className="conversion-input"><input id="jus-amount" type="number" min="0" step="0.01" value={jusAmount} onChange={e => setJusAmount(e.target.value)}/><span>JUS</span></div><div className="conversion-result"><span>Resultado estimado</span><strong>{convertedJus === null ? "API no conectada" : money(convertedJus)}</strong></div></div><div className="conversion-block"><div className="conversion-head"><label htmlFor="ars-amount">Pesos a JUS</label><span>CONVERSIÓN INVERSA</span></div><div className="conversion-input"><span className="currency-prefix">$</span><input id="ars-amount" type="number" min="0" step="0.01" value={arsAmount} onChange={e => setArsAmount(e.target.value)}/><span>ARS</span></div><div className="conversion-result"><span>Resultado estimado</span><strong>{convertedArs === null ? "API no conectada" : `${convertedArs.toLocaleString("es-AR", { maximumFractionDigits: 4 })} JUS`}</strong></div></div><div className="calculator-note"><CircleHelp size={15}/><span>La conversión usa el valor JUS vigente devuelto por el backend. Los cálculos de honorarios por actuación se incorporarán cuando cada regla tenga respaldo normativo verificado.</span></div></div><aside className="side-info"><div className="panel"><span className="panel-kicker">VALOR DE REFERENCIA</span><h3>JUS Córdoba</h3><div className="side-jus">{jus ? money(Number(jus.value_ars)) : "Sin conexión"}</div><p className="side-copy">{jus ? `Vigencia: ${new Date(jus.effective_date + "T12:00:00").toLocaleDateString("es-AR")}` : "Conectá la API para consultar el valor oficial."}</p>{jus && <a className="source-link" href={jus.source_url} target="_blank" rel="noreferrer">Consultar fuente <ArrowUpRight size={14}/></a>}<div className="info-foot">Jurisdicción: exclusivamente Provincia de Córdoba.</div></div></aside></section>}
+        {section === "honorarios" && <section className="module-layout"><div className="panel module-panel calculator-panel"><div className="module-icon sand"><Calculator size={21}/></div><span className="panel-kicker">CONVERSOR JUS · PESOS</span><h2>Calculá con transparencia.</h2><p className="module-intro">Conversión informativa usando el último valor disponible en la API. No reemplaza la determinación de honorarios conforme a la ley.</p><div className="conversion-block"><div className="conversion-head"><label htmlFor="jus-amount">JUS a pesos</label><span>CONVERSIÓN DIRECTA</span></div><div className="conversion-input"><input id="jus-amount" type="number" min="0" step="0.01" value={jusAmount} onChange={e => setJusAmount(e.target.value)}/><span>JUS</span></div><div className="conversion-result"><span>Resultado estimado</span><strong>{convertedJus === null ? "Calculando…" : money(Number(convertedJus.ars))}</strong></div></div><div className="conversion-block"><div className="conversion-head"><label htmlFor="ars-amount">Pesos a JUS</label><span>CONVERSIÓN INVERSA</span></div><div className="conversion-input"><span className="currency-prefix">$</span><input id="ars-amount" type="number" min="0" step="0.01" value={arsAmount} onChange={e => setArsAmount(e.target.value)}/><span>ARS</span></div><div className="conversion-result"><span>Resultado estimado</span><strong>{convertedArs === null ? "Calculando…" : `${Number(convertedArs.jus).toLocaleString("es-AR", { maximumFractionDigits: 4 })} JUS`}</strong></div></div><div className="calculator-note"><CircleHelp size={15}/><span>La conversión usa el valor JUS vigente devuelto por el backend. Los cálculos de honorarios por actuación se incorporarán cuando cada regla tenga respaldo normativo verificado.</span></div></div><aside className="side-info"><div className="panel"><span className="panel-kicker">VALOR DE REFERENCIA</span><h3>JUS Córdoba</h3><div className="side-jus">{jus ? money(Number(jus.value_ars)) : "Sin conexión"}</div><p className="side-copy">{jus ? `Vigencia: ${new Date(jus.effective_date + "T12:00:00").toLocaleDateString("es-AR")}` : "Conectá la API para consultar el valor oficial."}</p>{jus && <a className="source-link" href={jus.source_url} target="_blank" rel="noreferrer">Consultar fuente <ArrowUpRight size={14}/></a>}<div className="info-foot">Jurisdicción: exclusivamente Provincia de Córdoba.</div></div></aside></section>}
 
         {section === "anonimizacion" && <section className="module-layout"><div className="panel module-panel anonymize-panel"><div className="module-icon sage"><FileLock2 size={21}/></div><span className="panel-kicker">PROTECCIÓN DOCUMENTAL</span><h2>Antes de compartir, protegé.</h2><p className="module-intro">La anonimización debe eliminar los datos del archivo, no simplemente cubrirlos en pantalla. Esta función todavía está en desarrollo.</p><div className="upload-zone"><div className="upload-icon"><UploadCloud size={25}/></div><strong>Prepará tu documento</strong><p>La carga de archivos se habilitará cuando el procesamiento seguro esté implementado.</p><button className="secondary-button" disabled><UploadCloud size={16}/> Próximamente</button></div><div className="privacy-checks"><div><Check size={15}/><span>El original debe conservarse sin modificaciones.</span></div><div><Check size={15}/><span>Las detecciones deben poder revisarse y corregirse.</span></div><div><Check size={15}/><span>El archivo final debe verificarse después de la redacción.</span></div></div></div><aside className="side-info"><div className="panel privacy-side"><div className="privacy-icon large"><ShieldCheck size={21}/></div><span className="panel-kicker">DISEÑO CON PRIVACIDAD</span><h3>Sin falsas garantías.</h3><p>OCR, manuscritos, firmas, sellos y metadatos requieren controles específicos. Siempre habrá una revisión humana antes de compartir.</p></div></aside></section>}
         <footer className="page-footer"><span>HONORIA CÓRDOBA</span><span>Una herramienta de apoyo. No reemplaza el criterio profesional.</span><span>HECHO CON CUIDADO <span className="footer-heart">✳</span></span></footer>
