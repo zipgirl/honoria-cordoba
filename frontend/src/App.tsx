@@ -44,7 +44,7 @@ function App() {
     ]).then(([jusResult, arsResult]: [JusConversion, ArsConversion]) => {
       setConvertedJus(jusResult);
       setConvertedArs(arsResult);
-    }).catch(error => { if (error.name !== "AbortError") { setConvertedJus(null); setConvertedArs(null); } });
+    }).catch(error => { if (!(error instanceof DOMException && error.name === "AbortError")) { setConvertedJus(null); setConvertedArs(null); } });
     return () => controller.abort();
   }, [jus, jusAmount, arsAmount]);
   const nav = [
