@@ -10,11 +10,11 @@
 - [ ] Validar el alcance legal y las reglas arancelarias con fuentes primarias.
 
 ## Fase 1 — base técnica
-- [ ] Crear estructura de frontend y backend.
+- [x] Crear estructura inicial de frontend y backend.
 - [ ] Configurar linting, formato, pruebas y CI.
 - [ ] Configurar entornos y secretos fuera del repositorio.
-- [ ] Crear API de salud y frontend inicial.
-- [ ] Definir diseño visual y sistema de componentes responsive.
+- [x] Crear API de salud y frontend inicial.
+- [x] Definir diseño visual inicial y sistema responsive.
 
 ## Fase 2 — motor jurídico y honorarios
 - [ ] Construir inventario normativo versionado.
